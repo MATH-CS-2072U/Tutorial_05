@@ -1,5 +1,5 @@
-# Code for LU decomposition, forward and backward substitution. Programmed (mostly) in class.
-# Work in progress! We will add the swapping of rows following the same rule as Gauss elimination in the same folder.
+# Code for LU decomposition, forward and backward substitution. 
+# Modified by Azar to include parity = determinant of permutation matrix = (-1)^(row swaps)
 import numpy as np
 
 # When a pivot smaller than this number is found, it is considered equal to zero and an error is thrown.
@@ -27,37 +27,11 @@ def LUP(A):
     L = np.identity(n)
     P = np.identity(n)
     success = True     # Most matrices are invertable, so we set the flag to True by default.
+    parity = 1         # Tracks sign changes from row swaps: +1 even #swaps, -1 odd #swaps.
     for j in range(1,n):
         # Select the largest element (in abs value) on or below the diagonal.
         k = np.argmax(abs(U[j-1:,j-1])) + j
-        U = swap(U,k,j)
-        P = swap(P,k,j)
-        # Swap rows k and j of L only up to - not including - column j:
-        if j > 1:
-            L = swapL(L,k,j)
-        # If the largest available pivot is too close to zero, warn the user and stop.
-        if abs(U[j-1,j-1]) < small:
-            success = False
-            break
-        # The actual elimination: create zeros below the diagonal:
-        for i in range(j+1,n+1):
-            L[i-1,j-1] = U[i-1,j-1] / U[j-1,j-1]
-            U[i-1,:] = U[i-1,:] - L[i-1,j-1] * U[j-1,:]
-    return L, U, P, success
-
-# PA=LU decomposition with row swapping (pivoting).
-# Input: n by n array of floats A. Output: factors L and U, permutation matrix P, boolean succes (set to False if a pivot smaller than variable "small" is encountered).
-def LUP2(A):
-    n = np.shape(A)[0] # n is the nr of rows in A
-    U = np.copy(A)
-    L = np.identity(n)
-    P = np.identity(n)
-    success = True     # Most matrices are invertable, so we set the flag to True by default.
-    parity = 1        # +1 for an even number of row swaps, -1 for an odd number of row swaps.
-    for j in range(1,n):
-        # Select the largest element (in abs value) on or below the diagonal.
-        k = np.argmax(abs(U[j-1:,j-1])) + j
-        # If we actually swap two different rows, the determinant changes sign.
+        # If we swap two different rows, the determinant changes sign.
         if k != j:
             parity *= -1
         U = swap(U,k,j)
@@ -98,4 +72,3 @@ def LUforwardsub(A,r):
             dum += A[i-1,j-1] * x[j-1]
         x[i-1] = (r[i-1] - dum) / A[i-1,i-1]
     return x
-
